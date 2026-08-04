@@ -1,0 +1,3 @@
+**What:** Initialized fresh repository structure, configured GitHub Kanban/Roadmap boards, defined project labels, and logged Issue #1 regarding manual Google Sheets tracking pain points.
+**Why:** Establishing a structured development process early to collect authentic evidence for the Scholarship report.
+**Next:** Begin Phase 3 on `feature/core-member-session-tracking` to build Express scaffolding and member/session JSON models.
