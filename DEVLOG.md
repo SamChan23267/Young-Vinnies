@@ -12,3 +12,8 @@
 **What:** Implemented `GET`/`POST /api/members` endpoints, a `generateMemberCode` helper for auto-generating unique member codes, and a minimal frontend form and table for adding and viewing members.
 **Why:** This is the core feature that replaces manually typing student names into the Google Sheet — the original pain point behind the whole project.
 **Next:** Add session creation and listing so service sessions can be recorded alongside members.
+
+5th August 2026
+**What:** Added `GET`/`POST /api/sessions` endpoints, a `generateSessionId` helper, and a frontend form/list for creating and viewing sessions.
+**Why:** Members alone don't solve the tracking problem — sessions need to exist as records before attendance (and therefore hours) can be tracked against them.
+**Next:** Build attendance tracking so each session records which members actually attended.

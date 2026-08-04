@@ -74,3 +74,38 @@ app.post('/api/members', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+function generateSessionId(existingSessions) {
+  let maxId = 0;
+  existingSessions.forEach(session => {
+    const id = parseInt(session.id);
+    if (id > maxId) maxId = id;
+  });
+  return (maxId + 1).toString();
+}
+
+app.get('/api/sessions', async (req, res) => {
+  try {
+    const data = await readData();
+    res.json(data.sessions);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch sessions' });
+  }
+});
+
+app.post('/api/sessions', async (req, res) => {
+  try {
+    const { date, description } = req.body;
+    if (!date || !description) {
+      return res.status(400).json({ error: 'Date and description are required' });
+    }
+    const data = await readData();
+    const id = generateSessionId(data.sessions);
+    const newSession = { id, date, description, attendees: [] };
+    data.sessions.push(newSession);
+    await writeData(data);
+    res.status(201).json(newSession);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create session' });
+  }
+});
