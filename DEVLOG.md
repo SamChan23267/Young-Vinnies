@@ -7,3 +7,8 @@
 **What:** Set up a minimal Express server, `package.json`, `.gitignore`, a placeholder `index.html`, and an empty `data.json` structure (`{ members: [], sessions: [] }`).
 **Why:** Wanted a bare, runnable foundation before adding any real functionality, rather than bundling the whole app into one commit like the previous repo did.
 **Next:** Build member management so students can be added and listed — the first direct replacement for manual Google Sheets entry.
+
+5th August 2026
+**What:** Implemented `GET`/`POST /api/members` endpoints, a `generateMemberCode` helper for auto-generating unique member codes, and a minimal frontend form and table for adding and viewing members.
+**Why:** This is the core feature that replaces manually typing student names into the Google Sheet — the original pain point behind the whole project.
+**Next:** Add session creation and listing so service sessions can be recorded alongside members.

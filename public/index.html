@@ -1,11 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Young Vinnies Volunteer Hour Tracker</title>
-</head>
 <body>
   <h1>Young Vinnies Volunteer Hour Tracker</h1>
-  <p>Under construction.</p>
+
+  <section>
+    <h2>Member Management</h2>
+    <form id="add-member-form">
+      <label for="member-name">Member Name:</label>
+      <input type="text" id="member-name" required placeholder="e.g., John Doe">
+      <button type="submit">Add Member</button>
+    </form>
+
+    <table id="members-table">
+      <thead><tr><th>Name</th><th>Code</th></tr></thead>
+      <tbody id="members-tbody"></tbody>
+    </table>
+  </section>
+
+  <script src="script.js"></script>
 </body>
-</html>
