@@ -114,4 +114,11 @@ if (window.location.pathname.endsWith('session.html')) {
   });
 
   loadSessionDetails();
+
+  // Export CSV button handler
+  document.getElementById('export-csv-btn')?.addEventListener('click', () => {
+      window.location.href = '/api/export/csv';
+      showMessage('Downloading CSV file...', 'success');
+  });
 }
+
