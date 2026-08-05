@@ -17,3 +17,8 @@
 **What:** Added `GET`/`POST /api/sessions` endpoints, a `generateSessionId` helper, and a frontend form/list for creating and viewing sessions.
 **Why:** Members alone don't solve the tracking problem — sessions need to exist as records before attendance (and therefore hours) can be tracked against them.
 **Next:** Build attendance tracking so each session records which members actually attended.
+
+5th August 2026
+**What:** Added `GET /api/sessions/:id` and `PUT /api/sessions/:id/attendance` endpoints, a new `session.html` page, and frontend logic to mark and save attendance per session.
+**Why:** This is the feature that actually eliminates the manual hour-counting problem from the old spreadsheet workflow — attendance data now drives hour totals automatically instead of manual tallying.
+**Next:** Add audit logging so every data change is tracked and recoverable.
