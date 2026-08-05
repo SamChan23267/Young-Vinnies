@@ -22,3 +22,8 @@
 **What:** Added `GET /api/sessions/:id` and `PUT /api/sessions/:id/attendance` endpoints, a new `session.html` page, and frontend logic to mark and save attendance per session.
 **Why:** This is the feature that actually eliminates the manual hour-counting problem from the old spreadsheet workflow — attendance data now drives hour totals automatically instead of manual tallying.
 **Next:** Add audit logging so every data change is tracked and recoverable.
+
+5th August 2026
+**What:** Added `audit_log.json` and a `logAudit` helper, called from the member creation, session creation, and attendance update endpoints.
+**Why:** Wanted a reliable record of who changed what and when, in case of disputes or mistakes in recorded hours — especially important once other leaders start using the system.
+**Next:** Add CSV export in the format requested at the St Vincent de Paul meeting.
