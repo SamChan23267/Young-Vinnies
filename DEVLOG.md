@@ -27,3 +27,8 @@
 **What:** Added `audit_log.json` and a `logAudit` helper, called from the member creation, session creation, and attendance update endpoints.
 **Why:** Wanted a reliable record of who changed what and when, in case of disputes or mistakes in recorded hours — especially important once other leaders start using the system.
 **Next:** Add CSV export in the format requested at the St Vincent de Paul meeting.
+
+6th August 2026
+**What:** Added a `GET /api/export/csv` endpoint and a frontend export button to download all session attendance data as a CSV file.
+**Why:** Directly requested at our first meeting with the wider St Vincent de Paul Society — they needed a roll and return export in a specific format broken down by section and member.
+**Next:** Polish the UI with a proper visual design so the tool is presentable to other leaders and to SVdP.

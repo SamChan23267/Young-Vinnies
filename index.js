@@ -191,6 +191,34 @@ app.put('/api/sessions/:id/attendance', async (req, res) => {
   }
 });
 
+// GET /api/export/csv - Generate and return a CSV file of all session attendance data
+app.get('/api/export/csv', async (req, res) => {
+  try {
+    const data = await readData();
+    
+    // Create CSV header
+    let csv = 'Session Date,Session Description,Attended Member Codes\n';
+    
+    // Add rows for each session and attendee
+    data.sessions.forEach(session => {
+      if (session.attendees.length === 0) {
+        // Include sessions with no attendees
+        csv += `"${session.date}","${session.description}",""\n`;
+      } else {
+        session.attendees.forEach(attendeeCode => {
+          csv += `"${session.date}","${session.description}","${attendeeCode}"\n`;
+        });
+      }
+    });
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=volunteer_hours.csv');
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to export CSV' });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
