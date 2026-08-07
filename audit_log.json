@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "timestamp": "2026-08-07T01:53:22.329Z",
+    "action": "ADD_MEMBER",
+    "data": {
+      "name": "John Doe",
+      "code": "JOHND"
+    }
+  },
+  {
+    "timestamp": "2026-08-07T01:53:51.649Z",
+    "action": "ADD_MEMBER",
+    "data": {
+      "name": "Max Butler",
+      "code": "MAXB"
+    }
+  },
+  {
+    "timestamp": "2026-08-07T01:54:21.943Z",
+    "action": "CREATE_SESSION",
+    "data": {
+      "id": "1",
+      "date": "2026-08-07",
+      "description": "Gardening",
+      "attendees": []
+    }
+  }
+]
