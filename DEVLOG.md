@@ -32,3 +32,8 @@
 **What:** Added a `GET /api/export/csv` endpoint and a frontend export button to download all session attendance data as a CSV file.
 **Why:** Directly requested at our first meeting with the wider St Vincent de Paul Society — they needed a roll and return export in a specific format broken down by section and member.
 **Next:** Polish the UI with a proper visual design so the tool is presentable to other leaders and to SVdP.
+
+7th August 2026
+**What:** Replaced the minimal styling with a full CSS theme (gradient header, card-based sections, responsive breakpoints) and updated the HTML markup to match.
+**Why:** The functional version worked but wasn't presentable — wanted something I could confidently demo to other leaders and to SVdP without it looking unfinished.
+**Next:** Write full project documentation.

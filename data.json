@@ -1,4 +1,20 @@
 {
-  "members": [],
-  "sessions": []
+  "members": [
+    {
+      "name": "John Doe",
+      "code": "JOHND"
+    },
+    {
+      "name": "Max Butler",
+      "code": "MAXB"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "1",
+      "date": "2026-08-07",
+      "description": "Gardening",
+      "attendees": []
+    }
+  ]
 }
