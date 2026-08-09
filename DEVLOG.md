@@ -42,3 +42,9 @@
 **What:** Added session-based login using `express-session`, a `requireAuth` middleware protecting all data routes, and login/logout/check-auth endpoints. Passwords are hashed with bcrypt and compared securely; the session secret and credentials are loaded from a `.env` file rather than hardcoded in source.
 **Why:** After testing the app myself, realised other leaders and teachers would benefit from having direct access rather than relying solely on me to update records.
 **Next:** Add login page and frontend auth flow (redirect unauthenticated users, logout button).
+
+9th August 2026
+**What:** Added `login.html`, a `checkAuth()` function that redirects unauthenticated users away from protected pages, a `logout()` function, and logout buttons on `index.html` and `session.html`. Deliberately left out any display of default credentials on the login page itself.
+**Why:** Needed a usable entry point for the new authentication system, and wanted to avoid a real risk I identified while preparing my Scholarship report — the original version displayed the username/password directly on the login page, which is a genuine security exposure if the site is public.
+**Next:** Move remaining secrets fully into environment variables and confirm `.env` is excluded from git.
+ 

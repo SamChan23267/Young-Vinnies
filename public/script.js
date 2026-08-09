@@ -1,5 +1,26 @@
 // Utility Functions
 
+// Authentication helpers
+async function checkAuth() {
+  try {
+    const response = await fetch('/api/check-auth');
+    const data = await response.json();
+    if (!data.authenticated) window.location.href = '/login.html';
+  } catch (error) {
+    console.error('Auth check failed:', error);
+    window.location.href = '/login.html';
+  }
+}
+
+async function logout() {
+  try {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login.html';
+  } catch (error) {
+    showMessage('Logout failed', 'error');
+  }
+}
+
 // Display a message to the user
 function showMessage(message, type = 'success') {
     const container = document.getElementById('message-container');
@@ -20,6 +41,10 @@ async function apiCall(url, options = {}) {
     try {
         const response = await fetch(url, options);
         if (!response.ok) {
+            if (response.status === 401) { // NEW: redirect if session expired
+            window.location.href = '/login.html';
+            return;
+            }
             const error = await response.json();
             throw new Error(error.error || 'Request failed');
         }
@@ -32,7 +57,8 @@ async function apiCall(url, options = {}) {
 
 // Index Page Functions
 if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
-    
+    checkAuth();
+    document.getElementById('logout-btn')?.addEventListener('click', logout);
     // Load members
     async function loadMembers() {
         try {
@@ -156,6 +182,9 @@ if (window.location.pathname.endsWith('index.html') || window.location.pathname 
 // Session Page Functions
 if (window.location.pathname.endsWith('session.html')) {
     
+    checkAuth();
+    document.getElementById('logout-btn')?.addEventListener('click', logout);
+
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('id');
     
