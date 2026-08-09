@@ -1,4 +1,7 @@
+require('dotenv').config(); // Load SESSION_SECRET, ADMIN_USERNAME, ADMIN_PASSWORD_HASH from .env
 const express = require('express');
+const session = require('express-session');
+const bcrypt = require('bcrypt');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -8,6 +11,33 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.static('public'));
+
+// Authentication: session setup 
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000
+  }
+}));
+
+// Authentication: block direct access to protected pages without login
+app.use((req, res, next) => {
+  if (req.path.includes('/login.html') ||
+      req.path.includes('.css') ||
+      req.path.includes('.js') ||
+      req.path.startsWith('/api/')) {
+    return next();
+  }
+  if (req.path === '/' || req.path === '/index.html' || req.path === '/session.html') {
+    if (!req.session.authenticated) {
+      return res.redirect('/login.html');
+    }
+  }
+  next();
+});
 
 // File paths
 const DATA_FILE = path.join(__dirname, 'data.json');
@@ -22,6 +52,17 @@ async function readData() {
     console.error('Error reading data:', error);
     return { members: [], sessions: [] };
   }
+}
+
+// Authentication: credentials + middleware
+const VALID_USERNAME = process.env.ADMIN_USERNAME;
+const VALID_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
+
+function requireAuth(req, res, next) {
+  if (!req.session.authenticated) {
+    return res.status(401).json({ error: 'Unauthorized. Please login first.' });
+  }
+  next();
 }
 
 // Helper function to write data
@@ -85,9 +126,36 @@ function generateSessionId(existingSessions) {
 }
 
 // API Endpoints
+// Authentication Endpoints 
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+  const validUsername = username === VALID_USERNAME;
+  const validPassword = validUsername && await bcrypt.compare(password, VALID_PASSWORD_HASH);
+  if (validUsername && validPassword) {
+    req.session.authenticated = true;
+    req.session.username = username;
+    return res.json({ success: true, message: 'Login successful' });
+  }
+  res.status(401).json({ error: 'Invalid username or password' });
+});
 
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) return res.status(500).json({ error: 'Failed to logout' });
+    res.json({ success: true, message: 'Logout successful' });
+  });
+});
+
+app.get('/api/check-auth', (req, res) => {
+  res.json({ authenticated: !!req.session.authenticated });
+});
+
+// Data Management Endpoints (Protected) 
 // GET /api/members - Return all members
-app.get('/api/members', async (req, res) => {
+app.get('/api/members', requireAuth, async (req, res) => {
   try {
     const data = await readData();
     res.json(data.members);
@@ -97,7 +165,7 @@ app.get('/api/members', async (req, res) => {
 });
 
 // POST /api/members - Add a new member
-app.post('/api/members', async (req, res) => {
+app.post('/api/members', requireAuth,async (req, res) => {
   try {
     const { name } = req.body;
     
@@ -125,7 +193,7 @@ app.post('/api/members', async (req, res) => {
 });
 
 // GET /api/sessions - Return all sessions
-app.get('/api/sessions', async (req, res) => {
+app.get('/api/sessions', requireAuth, async (req, res) => {
   try {
     const data = await readData();
     res.json(data.sessions);
@@ -135,7 +203,7 @@ app.get('/api/sessions', async (req, res) => {
 });
 
 // POST /api/sessions - Create a new session
-app.post('/api/sessions', async (req, res) => {
+app.post('/api/sessions', requireAuth, async (req, res) => {
   try {
     const { date, description } = req.body;
     
@@ -164,7 +232,7 @@ app.post('/api/sessions', async (req, res) => {
 });
 
 // GET /api/sessions/:id - Get a specific session with attendance details
-app.get('/api/sessions/:id', async (req, res) => {
+app.get('/api/sessions/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const data = await readData();
@@ -181,7 +249,7 @@ app.get('/api/sessions/:id', async (req, res) => {
 });
 
 // PUT /api/sessions/:id/attendance - Update attendance for a session
-app.put('/api/sessions/:id/attendance', async (req, res) => {
+app.put('/api/sessions/:id/attendance', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { attendees } = req.body;
@@ -211,7 +279,7 @@ app.put('/api/sessions/:id/attendance', async (req, res) => {
 });
 
 // GET /api/export/csv - Generate and return a CSV file of all session attendance data
-app.get('/api/export/csv', async (req, res) => {
+app.get('/api/export/csv', requireAuth, async (req, res) => {
   try {
     const data = await readData();
     

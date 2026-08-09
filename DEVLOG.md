@@ -37,3 +37,8 @@
 **What:** Replaced the minimal styling with a full CSS theme (gradient header, card-based sections, responsive breakpoints) and updated the HTML markup to match.
 **Why:** The functional version worked but wasn't presentable — wanted something I could confidently demo to other leaders and to SVdP without it looking unfinished.
 **Next:** Write full project documentation.
+
+9th August 2026
+**What:** Added session-based login using `express-session`, a `requireAuth` middleware protecting all data routes, and login/logout/check-auth endpoints. Passwords are hashed with bcrypt and compared securely; the session secret and credentials are loaded from a `.env` file rather than hardcoded in source.
+**Why:** After testing the app myself, realised other leaders and teachers would benefit from having direct access rather than relying solely on me to update records.
+**Next:** Add login page and frontend auth flow (redirect unauthenticated users, logout button).
