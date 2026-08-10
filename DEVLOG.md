@@ -57,3 +57,8 @@
 **What:** Replaced the single hardcoded admin login with a multi-user system backed by `users.json`, storing bcrypt-hashed passwords and assigning each user a role (`admin` or `super_admin`). Updated the login and check-auth endpoints to return role/display name, and updated audit logging so every entry records which user made the change.
 **Why:** A single shared login didn't reflect reality once other leaders and a teacher started using the app — distinguishing roles matters once more than one person can make changes, especially for anything sensitive like viewing the full audit trail. Kept passwords hashed and off the login page, consistent with the approach from Stage 11 rather than repeating the original repo's plaintext/visible-credentials pattern.
 **Next:** Add an audit log viewer so a super admin can actually review who changed what.
+
+10th August 2026
+**What:** Added a `GET /api/audit-log` endpoint restricted to `super_admin` via a new `requireSuperAdmin` middleware, plus an `audit-log.html` page showing timestamped, per-user change history. The "Administrator Tools" section on the main page is now only shown to users with the `super_admin` role.
+**Why:** With multiple leaders able to modify data, a super admin needs a way to review the full history of changes (who added a member, who marked attendance) without restricting day-to-day access for regular leaders — accountability without adding friction.
+**Next:** Decide whether flexible CSV export formats (horizontal/vertical/summary) belong in this phase or need their own trigger and stage — currently unresolved.

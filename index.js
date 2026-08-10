@@ -31,7 +31,7 @@ app.use((req, res, next) => {
       req.path.startsWith('/api/')) {
     return next();
   }
-  if (req.path === '/' || req.path === '/index.html' || req.path === '/session.html') {
+  if (req.path === '/' || req.path === '/index.html' || req.path === '/session.html' || req.path === '/audit-log.html') {
     if (!req.session.authenticated) {
       return res.redirect('/login.html');
     }
@@ -327,6 +327,16 @@ app.get('/api/export/csv', requireAuth, async (req, res) => {
     res.send(csv);
   } catch (error) {
     res.status(500).json({ error: 'Failed to export CSV' });
+  }
+});
+
+// GET /api/audit-log - view full audit trail (super admin only)
+app.get('/api/audit-log', requireSuperAdmin, async (req, res) => {
+  try {
+    const logData = await fs.readFile(AUDIT_LOG_FILE, 'utf8');
+    res.json(JSON.parse(logData));
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch audit log' });
   }
 });
 

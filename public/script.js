@@ -57,7 +57,20 @@ async function apiCall(url, options = {}) {
 
 // Index Page Functions
 if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
-    checkAuth();
+    async function checkAuthAndRole() { 
+        try {
+            const response = await fetch('/api/check-auth');
+            const data = await response.json();
+            if (!data.authenticated) {
+            window.location.href = '/login.html';
+            } else if (data.role === 'super_admin') {
+            document.getElementById('admin-section').style.display = 'block';
+            }
+        } catch (error) {
+            window.location.href = '/login.html';
+        }
+        }
+    checkAuthAndRole();
     document.getElementById('logout-btn')?.addEventListener('click', logout);
     // Load members
     async function loadMembers() {
@@ -259,4 +272,67 @@ if (window.location.pathname.endsWith('session.html')) {
 
     // Initialize session page
     loadSessionDetails();
+}
+
+// Audit Log Page Functions
+if (window.location.pathname.endsWith('audit-log.html')) {
+    
+    // Check authentication and super admin role
+    async function checkSuperAdmin() {
+        try {
+            const response = await fetch('/api/check-auth');
+            const data = await response.json();
+            if (!data.authenticated) {
+                window.location.href = '/login.html';
+            } else if (data.role !== 'super_admin') {
+                showMessage('Access denied. Super admin only.', 'error');
+                setTimeout(() => window.location.href = 'index.html', 2000);
+            }
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            window.location.href = '/login.html';
+        }
+    }
+    
+    checkSuperAdmin();
+    
+    // Add logout button handler
+    document.getElementById('logout-btn')?.addEventListener('click', logout);
+    
+    // Load audit log
+    async function loadAuditLog() {
+        try {
+            const logs = await apiCall('/api/audit-log');
+            const tbody = document.getElementById('audit-log-tbody');
+            
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><p>No audit log entries yet.</p></td></tr>';
+                return;
+            }
+            
+            // Sort logs by timestamp, most recent first
+            logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            tbody.innerHTML = logs.map(log => {
+                const date = new Date(log.timestamp);
+                const formattedDate = date.toLocaleString();
+                const details = JSON.stringify(log.data, null, 2);
+                
+                return `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td><strong>${log.username || 'unknown'}</strong></td>
+                        <td><span class="action-badge">${log.action}</span></td>
+                        <td><pre style="margin: 0; font-size: 0.85em; max-width: 400px; overflow-x: auto;">${details}</pre></td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (error) {
+            console.error('Error loading audit log:', error);
+            showMessage('Failed to load audit log', 'error');
+        }
+    }
+    
+    // Initialize audit log page
+    loadAuditLog();
 }
