@@ -52,3 +52,8 @@
  **What:** Added `dotenv`, created `.env.example` documenting required variables (`SESSION_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`), and moved the real values into a local `.env` file excluded by `.gitignore`.
 **Why:** Hardcoding secrets in source code means anyone with repo access (or anyone finding the repo if it's ever made public) can read them directly. Hit a `"secret option required for sessions"` error initially because `.env` wasn't created yet and `dotenv.config()` needs to run before the session middleware — fixed by creating a real `.env` and confirming `require('dotenv').config()` sits at the very top of `index.js`.
 **Next:** Add admin/super-admin role distinction now that multiple people can log in.
+
+10th August 2026
+**What:** Replaced the single hardcoded admin login with a multi-user system backed by `users.json`, storing bcrypt-hashed passwords and assigning each user a role (`admin` or `super_admin`). Updated the login and check-auth endpoints to return role/display name, and updated audit logging so every entry records which user made the change.
+**Why:** A single shared login didn't reflect reality once other leaders and a teacher started using the app — distinguishing roles matters once more than one person can make changes, especially for anything sensitive like viewing the full audit trail. Kept passwords hashed and off the login page, consistent with the approach from Stage 11 rather than repeating the original repo's plaintext/visible-credentials pattern.
+**Next:** Add an audit log viewer so a super admin can actually review who changed what.

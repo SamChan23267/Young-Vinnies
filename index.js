@@ -55,12 +55,29 @@ async function readData() {
 }
 
 // Authentication: credentials + middleware
-const VALID_USERNAME = process.env.ADMIN_USERNAME;
-const VALID_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
+const USERS_FILE = path.join(__dirname, 'users.json'); // NEW: multi-user store
+
+async function readUsers() {
+  try {
+    const data = await fs.readFile(USERS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error reading users:', error);
+    return [];
+  }
+}
 
 function requireAuth(req, res, next) {
   if (!req.session.authenticated) {
     return res.status(401).json({ error: 'Unauthorized. Please login first.' });
+  }
+  next();
+}
+
+// restricts a route to super_admin role only
+function requireSuperAdmin(req, res, next) {
+  if (!req.session.authenticated || req.session.role !== 'super_admin') {
+    return res.status(403).json({ error: 'Forbidden. Super admin access required.' });
   }
   next();
 }
@@ -71,21 +88,16 @@ async function writeData(data) {
 }
 
 // Helper function to log audit entry
-async function logAudit(action, data) {
+async function logAudit(action, data, username) { 
   try {
     const logData = await fs.readFile(AUDIT_LOG_FILE, 'utf8');
     const logs = JSON.parse(logData);
-    logs.push({
-      timestamp: new Date().toISOString(),
-      action,
-      data
-    });
+    logs.push({ timestamp: new Date().toISOString(), username: username || 'unknown', action, data }); // NEW: username field
     await fs.writeFile(AUDIT_LOG_FILE, JSON.stringify(logs, null, 2));
   } catch (error) {
     console.error('Error logging audit:', error);
   }
 }
-
 // Helper function to generate unique member code
 function generateMemberCode(name, existingCodes) {
   // Remove special characters and convert to uppercase
@@ -132,14 +144,21 @@ app.post('/api/login', async (req, res) => {
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
   }
-  const validUsername = username === VALID_USERNAME;
-  const validPassword = validUsername && await bcrypt.compare(password, VALID_PASSWORD_HASH);
-  if (validUsername && validPassword) {
-    req.session.authenticated = true;
-    req.session.username = username;
-    return res.json({ success: true, message: 'Login successful' });
+  try {
+    const users = await readUsers();
+    const user = users.find(u => u.username === username);
+    const validPassword = user && await bcrypt.compare(password, user.passwordHash);
+    if (user && validPassword) {
+      req.session.authenticated = true;
+      req.session.username = username;
+      req.session.role = user.role; 
+      req.session.displayName = user.displayName; 
+      return res.json({ success: true, role: user.role, displayName: user.displayName });
+    }
+    res.status(401).json({ error: 'Invalid username or password' });
+  } catch (error) {
+    res.status(500).json({ error: 'Login failed' });
   }
-  res.status(401).json({ error: 'Invalid username or password' });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -150,7 +169,12 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/check-auth', (req, res) => {
-  res.json({ authenticated: !!req.session.authenticated });
+  res.json({
+    authenticated: !!req.session.authenticated,
+    username: req.session.username,
+    role: req.session.role,      
+    displayName: req.session.displayName 
+  });
 });
 
 // Data Management Endpoints (Protected) 
@@ -184,7 +208,7 @@ app.post('/api/members', requireAuth,async (req, res) => {
     
     data.members.push(newMember);
     await writeData(data);
-    await logAudit('ADD_MEMBER', newMember);
+    await logAudit('ADD_MEMBER', newMember, req.session.username);
     
     res.status(201).json(newMember);
   } catch (error) {
@@ -223,7 +247,7 @@ app.post('/api/sessions', requireAuth, async (req, res) => {
     
     data.sessions.push(newSession);
     await writeData(data);
-    await logAudit('CREATE_SESSION', newSession);
+    await logAudit('CREATE_SESSION', newSession, req.session.username);
     
     res.status(201).json(newSession);
   } catch (error) {
@@ -270,7 +294,7 @@ app.put('/api/sessions/:id/attendance', requireAuth, async (req, res) => {
     await logAudit('UPDATE_ATTENDANCE', {
       sessionId: id,
       attendees
-    });
+    }, req.session.username);
     
     res.json(data.sessions[sessionIndex]);
   } catch (error) {
