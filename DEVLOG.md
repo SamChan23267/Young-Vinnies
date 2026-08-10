@@ -48,3 +48,7 @@
 **Why:** Needed a usable entry point for the new authentication system, and wanted to avoid a real risk I identified while preparing my Scholarship report — the original version displayed the username/password directly on the login page, which is a genuine security exposure if the site is public.
 **Next:** Move remaining secrets fully into environment variables and confirm `.env` is excluded from git.
  
+ 9th August 2026
+ **What:** Added `dotenv`, created `.env.example` documenting required variables (`SESSION_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`), and moved the real values into a local `.env` file excluded by `.gitignore`.
+**Why:** Hardcoding secrets in source code means anyone with repo access (or anyone finding the repo if it's ever made public) can read them directly. Hit a `"secret option required for sessions"` error initially because `.env` wasn't created yet and `dotenv.config()` needs to run before the session middleware — fixed by creating a real `.env` and confirming `require('dotenv').config()` sits at the very top of `index.js`.
+**Next:** Add admin/super-admin role distinction now that multiple people can log in.
