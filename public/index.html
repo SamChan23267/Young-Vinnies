@@ -11,6 +11,7 @@
         <header>
             <h1>🌟 Young Vinnies Volunteer Hour Tracker</h1>
             <p>Track volunteer hours and manage service sessions</p>
+            <button id="logout-btn" class="btn btn-secondary logout-btn">Logout</button>
         </header>
 
         <main>
@@ -81,6 +82,12 @@
                 <h2>📊 Data Export</h2>
                 <p>Download all session attendance data as a CSV file.</p>
                 <button id="export-csv-btn" class="btn btn-success">Export All Sessions to CSV</button>
+            </section>
+
+            <!-- only shown to super_admin via script.js -->
+            <section class="card" id="admin-section" style="display: none;">
+                <h2>🔐 Administrator Tools</h2>
+                <a href="audit-log.html" class="btn btn-info">View Audit Log</a>
             </section>
         </main>
 

@@ -1,0 +1,4 @@
+[
+  { "username": "admin", "passwordHash": "$2b$10$HwVxWiSdAmk7w2PKdWaKNOi7lY3ucZ4cw6bdZqxV2j.eivR6FLEee", "role": "super_admin", "displayName": "Super Administrator" },
+  { "username": "leader1", "passwordHash": "$2b$10$tBzRV3JXdc.kBRLE5X8bn.BP5E4EKSyG0iyX8XIIsmn.bNu8R5Vb.", "role": "admin", "displayName": "Team Leader 1" }
+]

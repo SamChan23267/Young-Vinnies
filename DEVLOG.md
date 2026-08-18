@@ -37,3 +37,28 @@
 **What:** Replaced the minimal styling with a full CSS theme (gradient header, card-based sections, responsive breakpoints) and updated the HTML markup to match.
 **Why:** The functional version worked but wasn't presentable — wanted something I could confidently demo to other leaders and to SVdP without it looking unfinished.
 **Next:** Write full project documentation.
+
+9th August 2026
+**What:** Added session-based login using `express-session`, a `requireAuth` middleware protecting all data routes, and login/logout/check-auth endpoints. Passwords are hashed with bcrypt and compared securely; the session secret and credentials are loaded from a `.env` file rather than hardcoded in source.
+**Why:** After testing the app myself, realised other leaders and teachers would benefit from having direct access rather than relying solely on me to update records.
+**Next:** Add login page and frontend auth flow (redirect unauthenticated users, logout button).
+
+9th August 2026
+**What:** Added `login.html`, a `checkAuth()` function that redirects unauthenticated users away from protected pages, a `logout()` function, and logout buttons on `index.html` and `session.html`. Deliberately left out any display of default credentials on the login page itself.
+**Why:** Needed a usable entry point for the new authentication system, and wanted to avoid a real risk I identified while preparing my Scholarship report — the original version displayed the username/password directly on the login page, which is a genuine security exposure if the site is public.
+**Next:** Move remaining secrets fully into environment variables and confirm `.env` is excluded from git.
+ 
+ 9th August 2026
+ **What:** Added `dotenv`, created `.env.example` documenting required variables (`SESSION_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`), and moved the real values into a local `.env` file excluded by `.gitignore`.
+**Why:** Hardcoding secrets in source code means anyone with repo access (or anyone finding the repo if it's ever made public) can read them directly. Hit a `"secret option required for sessions"` error initially because `.env` wasn't created yet and `dotenv.config()` needs to run before the session middleware — fixed by creating a real `.env` and confirming `require('dotenv').config()` sits at the very top of `index.js`.
+**Next:** Add admin/super-admin role distinction now that multiple people can log in.
+
+10th August 2026
+**What:** Replaced the single hardcoded admin login with a multi-user system backed by `users.json`, storing bcrypt-hashed passwords and assigning each user a role (`admin` or `super_admin`). Updated the login and check-auth endpoints to return role/display name, and updated audit logging so every entry records which user made the change.
+**Why:** A single shared login didn't reflect reality once other leaders and a teacher started using the app — distinguishing roles matters once more than one person can make changes, especially for anything sensitive like viewing the full audit trail. Kept passwords hashed and off the login page, consistent with the approach from Stage 11 rather than repeating the original repo's plaintext/visible-credentials pattern.
+**Next:** Add an audit log viewer so a super admin can actually review who changed what.
+
+10th August 2026
+**What:** Added a `GET /api/audit-log` endpoint restricted to `super_admin` via a new `requireSuperAdmin` middleware, plus an `audit-log.html` page showing timestamped, per-user change history. The "Administrator Tools" section on the main page is now only shown to users with the `super_admin` role.
+**Why:** With multiple leaders able to modify data, a super admin needs a way to review the full history of changes (who added a member, who marked attendance) without restricting day-to-day access for regular leaders — accountability without adding friction.
+**Next:** Decide whether flexible CSV export formats (horizontal/vertical/summary) belong in this phase or need their own trigger and stage — currently unresolved.
