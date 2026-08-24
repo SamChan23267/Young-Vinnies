@@ -71,4 +71,9 @@
 24th August 2026
 **What:** Added a `settings.html` page showing account info (username, role, display name) and a working change-password form, backed by a new `/api/change-password` endpoint. Moved the logout button out of every page's header into Settings, with a Settings link added to the shared nav so it stays one click away everywhere.
 **Why:** Not requested by anyone specifically — a self-directed improvement to give the header some breathing room and give logout (and any future account preferences) a proper, consistent home rather than a floating button repeated on every page.
-**Next:** Build the actual SVdP-required roll & return export format.
+**Next:** Add the change-password functionality properly, as its own commit.
+
+25th August 2026
+**What:** Added a `PUT /api/change-password` endpoint requiring the correct current password (verified via bcrypt) before allowing a new one to be set, and wired up the change-password form on the Settings page. Password changes are recorded in the audit log.
+**Why:** Completes the Settings page properly rather than leaving it half-built. Verifying the current password before allowing a change matters — without it, anyone with an already-open session could silently take over the account.
+**Next:** Build the actual SVdP-required roll & return export format (closes the still-open 17 March Issue).

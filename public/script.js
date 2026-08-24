@@ -285,6 +285,30 @@ if (window.location.pathname.endsWith('settings.html')) {
     }
   }
   loadUserInfo();
+
+  document.getElementById('change-password-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    if (newPassword !== confirmPassword) {
+        showMessage('New passwords do not match', 'error');
+        return;
+    }
+
+    try {
+        await apiCall('/api/change-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword })
+        });
+        showMessage('Password changed successfully!', 'success');
+        document.getElementById('change-password-form').reset();
+    } catch (error) {
+        console.error('Error changing password:', error);
+    }
+    });
 }
 
 // Audit Log Page Functions
