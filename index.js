@@ -31,7 +31,7 @@ app.use((req, res, next) => {
       req.path.startsWith('/api/')) {
     return next();
   }
-  const protectedPages = ['/', '/index.html', '/session.html', '/audit-log.html', '/members.html', '/sessions.html', '/export.html']; // UPDATED: added new split pages
+  const protectedPages = ['/', '/index.html', '/session.html', '/audit-log.html', '/members.html', '/sessions.html', '/export.html', '/settings.html'];
   if (protectedPages.includes(req.path)) {
     if (!req.session.authenticated) {
       return res.redirect('/login.html');
@@ -67,6 +67,10 @@ async function readUsers() {
     console.error('Error reading users:', error);
     return [];
   }
+}
+
+async function writeUsers(users) { 
+  await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2));
 }
 
 function requireAuth(req, res, next) {
@@ -177,6 +181,37 @@ app.get('/api/check-auth', (req, res) => {
     role: req.session.role,      
     displayName: req.session.displayName 
   });
+});
+
+app.put('/api/change-password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new password are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' });
+    }
+
+    const users = await readUsers();
+    const userIndex = users.findIndex(u => u.username === req.session.username);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const validCurrent = await bcrypt.compare(currentPassword, users[userIndex].passwordHash);
+    if (!validCurrent) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    users[userIndex].passwordHash = await bcrypt.hash(newPassword, 10);
+    await writeUsers(users);
+    await logAudit('CHANGE_PASSWORD', { username: req.session.username }, req.session.username);
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to change password' });
+  }
 });
 
 // Data Management Endpoints (Protected) 
