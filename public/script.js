@@ -271,6 +271,22 @@ if (window.location.pathname.endsWith('session.html')) {
     loadSessionDetails();
 }
 
+// Settings Page Functions
+if (window.location.pathname.endsWith('settings.html')) {
+  async function loadUserInfo() {
+    try {
+      const response = await fetch('/api/check-auth');
+      const data = await response.json();
+      document.getElementById('user-username').textContent = data.username || '-';
+      document.getElementById('user-role').textContent = data.role || '-';
+      document.getElementById('user-display-name').textContent = data.displayName || '-';
+    } catch (error) {
+      console.error('Error loading user info:', error);
+    }
+  }
+  loadUserInfo();
+}
+
 // Audit Log Page Functions
 if (window.location.pathname.endsWith('audit-log.html')) {
     

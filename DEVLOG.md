@@ -67,3 +67,8 @@
 **What:** Split the single long `index.html` into dedicated pages (`members.html`, `sessions.html`, `export.html`) with a shared navigation bar across all pages. `index.html` is now a simple landing page rather than holding every form and table at once. Consolidated the per-page auth checks (Stage 11) and role check (Stage 12) into one shared `initPage()` function used everywhere.
 **Why:** With authentication, roles, and an audit log added on top of the original member/session/export sections, the main page had become long and harder to navigate — especially for other leaders less familiar with the app. Logged as a self-observed usability issue before starting this work.
 **Next:** Build the actual SVdP-required roll & return export format (closes the still-open 17 March Issue) — this stage deliberately left export.html at its original single-button functionality, deferring format options to that dedicated stage.
+
+24th August 2026
+**What:** Added a `settings.html` page showing account info (username, role, display name) and a working change-password form, backed by a new `/api/change-password` endpoint. Moved the logout button out of every page's header into Settings, with a Settings link added to the shared nav so it stays one click away everywhere.
+**Why:** Not requested by anyone specifically — a self-directed improvement to give the header some breathing room and give logout (and any future account preferences) a proper, consistent home rather than a floating button repeated on every page.
+**Next:** Build the actual SVdP-required roll & return export format.

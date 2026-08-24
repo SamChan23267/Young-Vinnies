@@ -31,7 +31,7 @@ app.use((req, res, next) => {
       req.path.startsWith('/api/')) {
     return next();
   }
-  const protectedPages = ['/', '/index.html', '/session.html', '/audit-log.html', '/members.html', '/sessions.html', '/export.html']; // UPDATED: added new split pages
+  const protectedPages = ['/', '/index.html', '/session.html', '/audit-log.html', '/members.html', '/sessions.html', '/export.html', '/settings.html'];
   if (protectedPages.includes(req.path)) {
     if (!req.session.authenticated) {
       return res.redirect('/login.html');
