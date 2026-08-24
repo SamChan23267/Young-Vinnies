@@ -31,13 +31,15 @@ app.use((req, res, next) => {
       req.path.startsWith('/api/')) {
     return next();
   }
-  if (req.path === '/' || req.path === '/index.html' || req.path === '/session.html' || req.path === '/audit-log.html') {
+  const protectedPages = ['/', '/index.html', '/session.html', '/audit-log.html', '/members.html', '/sessions.html', '/export.html']; // UPDATED: added new split pages
+  if (protectedPages.includes(req.path)) {
     if (!req.session.authenticated) {
       return res.redirect('/login.html');
     }
   }
   next();
 });
+
 
 // File paths
 const DATA_FILE = path.join(__dirname, 'data.json');

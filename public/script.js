@@ -1,16 +1,6 @@
 // Utility Functions
 
 // Authentication helpers
-async function checkAuth() {
-  try {
-    const response = await fetch('/api/check-auth');
-    const data = await response.json();
-    if (!data.authenticated) window.location.href = '/login.html';
-  } catch (error) {
-    console.error('Auth check failed:', error);
-    window.location.href = '/login.html';
-  }
-}
 
 async function logout() {
   try {
@@ -19,6 +9,28 @@ async function logout() {
   } catch (error) {
     showMessage('Logout failed', 'error');
   }
+}
+
+async function initPage() {
+  try {
+    const response = await fetch('/api/check-auth');
+    const data = await response.json();
+    if (!data.authenticated) {
+      window.location.href = '/login.html';
+      return;
+    }
+    const navAudit = document.getElementById('nav-audit');
+    if (navAudit && data.role === 'super_admin') navAudit.style.display = 'block';
+    const adminSection = document.getElementById('admin-section');
+    if (adminSection && data.role === 'super_admin') adminSection.style.display = 'block';
+  } catch (error) {
+    window.location.href = '/login.html';
+  }
+}
+
+if (!window.location.pathname.endsWith('login.html')) {
+  initPage();
+  document.getElementById('logout-btn')?.addEventListener('click', logout);
 }
 
 // Display a message to the user
@@ -55,23 +67,7 @@ async function apiCall(url, options = {}) {
     }
 }
 
-// Index Page Functions
-if (window.location.pathname.endsWith('index.html') || window.location.pathname === '/') {
-    async function checkAuthAndRole() { 
-        try {
-            const response = await fetch('/api/check-auth');
-            const data = await response.json();
-            if (!data.authenticated) {
-            window.location.href = '/login.html';
-            } else if (data.role === 'super_admin') {
-            document.getElementById('admin-section').style.display = 'block';
-            }
-        } catch (error) {
-            window.location.href = '/login.html';
-        }
-        }
-    checkAuthAndRole();
-    document.getElementById('logout-btn')?.addEventListener('click', logout);
+if (window.location.pathname.endsWith('members.html')) {
     // Load members
     async function loadMembers() {
         try {
@@ -94,7 +90,7 @@ if (window.location.pathname.endsWith('index.html') || window.location.pathname 
         }
     }
 
-    // Add member form handler
+        // Add member form handler
     document.getElementById('add-member-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const nameInput = document.getElementById('member-name');
@@ -117,6 +113,11 @@ if (window.location.pathname.endsWith('index.html') || window.location.pathname 
         }
     });
 
+  loadMembers();
+}
+
+
+if (window.location.pathname.endsWith('sessions.html')) {
     // Load sessions
     async function loadSessions() {
         try {
@@ -180,22 +181,18 @@ if (window.location.pathname.endsWith('index.html') || window.location.pathname 
             console.error('Error creating session:', error);
         }
     });
+  loadSessions();
+}
 
-    // Export CSV button handler
-    document.getElementById('export-csv-btn')?.addEventListener('click', () => {
-        window.location.href = '/api/export/csv';
-        showMessage('Downloading CSV file...', 'success');
-    });
-
-    // Initialize index page
-    loadMembers();
-    loadSessions();
+if (window.location.pathname.endsWith('export.html')) {
+  document.getElementById('export-csv-btn')?.addEventListener('click', () => {
+    window.location.href = '/api/export/csv';
+    showMessage('Downloading CSV file...', 'success');
+  });
 }
 
 // Session Page Functions
 if (window.location.pathname.endsWith('session.html')) {
-    
-    checkAuth();
     document.getElementById('logout-btn')?.addEventListener('click', logout);
 
     const urlParams = new URLSearchParams(window.location.search);
