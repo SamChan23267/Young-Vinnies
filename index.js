@@ -301,6 +301,28 @@ app.delete('/api/users/:username', requireSuperAdmin, async (req, res) => {
   }
 });
 
+app.get('/api/system-stats', requireSuperAdmin, async (req, res) => {
+  try {
+    const data = await readData();
+    const users = await readUsers();
+    const logData = await fs.readFile(AUDIT_LOG_FILE, 'utf8');
+    const logs = JSON.parse(logData);
+    const recentActivity = logs.slice(-10).reverse();
+    res.json({
+      totalMembers: data.members.length,
+      totalSessions: data.sessions.length,
+      totalUsers: users.length,
+      superAdmins: users.filter(u => u.role === 'super_admin').length,
+      admins: users.filter(u => u.role === 'admin').length,
+      totalAuditLogs: logs.length,
+      recentActivity
+      // totalHours omitted — depends on per-session hours tracking, not built yet
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch system statistics' });
+  }
+});
+
 // Data Management Endpoints (Protected) 
 // GET /api/members - Return all members
 app.get('/api/members', requireAuth, async (req, res) => {

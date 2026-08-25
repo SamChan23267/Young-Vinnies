@@ -82,3 +82,8 @@
 **What:** Added `GET`/`POST`/`PUT`/`DELETE /api/users` endpoints, all restricted to `super_admin`. New and updated passwords are hashed with bcrypt before storage. Includes safeguards against demoting or deleting the last remaining super admin, and against deleting your own account.
 **Why:** With multiple leaders now having roles, a super admin needs a way to actually add, edit, and remove user accounts through the app itself rather than editing `users.json` by hand.
 **Next:** Add a system statistics endpoint to summarise usage for the admin page.
+
+25th August 2026
+**What:** Added a `GET /api/system-stats` endpoint (super admin only) returning member/session/user counts, role breakdown, audit log count, and the 10 most recent audit log entries.
+**Why:** A super admin should be able to see the overall shape of the system at a glance rather than piecing it together from separate pages. Left out a "total hours" figure for now, since that depends on per-session hours tracking that doesn't exist in the app yet.
+**Next:** Build the user management page itself.
