@@ -23,13 +23,19 @@ async function initPage() {
     if (navAudit && data.role === 'super_admin') navAudit.style.display = 'block';
     const adminSection = document.getElementById('admin-section');
     if (adminSection && data.role === 'super_admin') adminSection.style.display = 'block';
+    const navAdminManagement = document.getElementById('nav-admin-management'); 
+    if (navAdminManagement && data.role === 'super_admin') navAdminManagement.style.display = 'block';
+    return data;
   } catch (error) {
     window.location.href = '/login.html';
+    return null;
   }
 }
 
+let currentUser = null;
+
 if (!window.location.pathname.endsWith('login.html')) {
-  initPage();
+  currentUser = initPage();
   document.getElementById('logout-btn')?.addEventListener('click', logout);
 }
 
@@ -269,6 +275,193 @@ if (window.location.pathname.endsWith('session.html')) {
 
     // Initialize session page
     loadSessionDetails();
+}
+
+if (window.location.pathname.endsWith('admin-management.html')) {
+    currentUser.then(data => {
+        if (!data) return; // initPage already redirected to login
+        if (data.role !== 'super_admin') {
+        alert('Access denied. Super admin access required.');
+        window.location.href = 'index.html';
+        return;
+        }
+        loadSystemStats();
+        loadUsers();
+    });
+
+
+  // Add user form submission
+    document.getElementById('add-user-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const username = document.getElementById('new-username').value;
+        const password = document.getElementById('new-password').value;
+        const role = document.getElementById('new-role').value;
+        const displayName = document.getElementById('new-display-name').value;
+        
+        try {
+            const response = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role, displayName })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('User added successfully!');
+                document.getElementById('add-user-form').reset();
+                loadUsers();
+                loadSystemStats();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('Failed to add user');
+        }
+    });
+
+    // Load system statistics
+    async function loadSystemStats() {
+        try {
+            const response = await fetch('/api/system-stats');
+            const stats = await response.json();
+            
+            document.getElementById('stat-users').textContent = stats.totalUsers;
+            document.getElementById('stat-super-admins').textContent = stats.superAdmins;
+            document.getElementById('stat-admins').textContent = stats.admins;
+            document.getElementById('stat-members').textContent = stats.totalMembers;
+            document.getElementById('stat-sessions').textContent = stats.totalSessions;
+            document.getElementById('stat-hours').textContent = stats.totalHours + ' hrs';
+            document.getElementById('stat-logs').textContent = stats.totalAuditLogs;
+            
+            // Display recent activity
+            const activityDiv = document.getElementById('recent-activity');
+            if (stats.recentActivity && stats.recentActivity.length > 0) {
+                activityDiv.innerHTML = '<ul class="activity-list">' +
+                    stats.recentActivity.map(log => `
+                        <li>
+                            <span class="activity-time">${new Date(log.timestamp).toLocaleString()}</span>
+                            <span class="activity-action ${log.action}">${log.action}</span>
+                            <span class="activity-user">by ${log.username}</span>
+                        </li>
+                    `).join('') +
+                    '</ul>';
+            } else {
+                activityDiv.innerHTML = '<p>No recent activity</p>';
+            }
+        } catch (error) {
+            console.error('Failed to load system stats:', error);
+        }
+    }
+
+    // Load all users
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/users');
+            const users = await response.json();
+            
+            document.getElementById('user-count').textContent = users.length;
+            
+            const tbody = document.getElementById('users-list');
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.username}</td>
+                    <td>${user.displayName}</td>
+                    <td><span class="badge ${user.role === 'super_admin' ? 'badge-primary' : 'badge-secondary'}">${user.role === 'super_admin' ? 'Super Admin' : 'Admin'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="openEditUserModal('${user.username}', '${user.displayName}', '${user.role}')">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.username}')">Delete</button>
+                    </td>
+                </tr>
+            `).join('');
+        } catch (error) {
+            console.error('Failed to load users:', error);
+        }
+    }
+
+    // Open edit user modal
+    function openEditUserModal(username, displayName, role) {
+        document.getElementById('edit-username').value = username;
+        document.getElementById('edit-display-name').value = displayName;
+        document.getElementById('edit-role').value = role;
+        document.getElementById('edit-password').value = '';
+        document.getElementById('edit-user-modal').style.display = 'flex';
+    }
+
+    // Close edit user modal
+    function closeEditUserModal() {
+        document.getElementById('edit-user-modal').style.display = 'none';
+    }
+
+    // Edit user form submission
+    document.getElementById('edit-user-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const username = document.getElementById('edit-username').value;
+        const displayName = document.getElementById('edit-display-name').value;
+        const role = document.getElementById('edit-role').value;
+        const password = document.getElementById('edit-password').value;
+        
+        const updates = { displayName, role };
+        if (password) {
+            updates.password = password;
+        }
+        
+        try {
+            const response = await fetch(`/api/users/${username}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('User updated successfully!');
+                closeEditUserModal();
+                loadUsers();
+                loadSystemStats();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('Failed to update user');
+        }
+    });
+
+    // Delete user
+    async function deleteUser(username) {
+        if (!confirm(`Are you sure you want to delete user "${username}"?`)) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/users/${username}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                alert('User deleted successfully!');
+                loadUsers();
+                loadSystemStats();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        } catch (error) {
+            alert('Failed to delete user');
+        }
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('edit-user-modal');
+        if (event.target === modal) {
+            closeEditUserModal();
+        }
+    }
 }
 
 // Settings Page Functions
