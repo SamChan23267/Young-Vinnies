@@ -31,7 +31,7 @@ app.use((req, res, next) => {
       req.path.startsWith('/api/')) {
     return next();
   }
-  const protectedPages = ['/', '/index.html', '/session.html', '/audit-log.html', '/members.html', '/sessions.html', '/export.html', '/settings.html'];
+  const protectedPages = ['/', '/index.html', '/session.html', '/audit-log.html', '/members.html', '/sessions.html', '/export.html', '/admin-management.html', '/settings.html'];
   if (protectedPages.includes(req.path)) {
     if (!req.session.authenticated) {
       return res.redirect('/login.html');
@@ -211,6 +211,93 @@ app.put('/api/change-password', requireAuth, async (req, res) => {
     res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+app.get('/api/users', requireSuperAdmin, async (req, res) => {
+  try {
+    const users = await readUsers();
+    const safeUsers = users.map(u => ({ username: u.username, role: u.role, displayName: u.displayName }));
+    res.json(safeUsers);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+app.post('/api/users', requireSuperAdmin, async (req, res) => {
+  try {
+    const { username, password, role, displayName } = req.body;
+    if (!username || !password || !role || !displayName) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+    if (!['admin', 'super_admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be admin or super_admin' });
+    }
+    const users = await readUsers();
+    if (users.find(u => u.username === username)) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+    const passwordHash = await bcrypt.hash(password, 10); // hashed, not plaintext
+    users.push({ username, passwordHash, role, displayName });
+    await writeUsers(users);
+    await logAudit('ADD_USER', { username, role, displayName }, req.session.username);
+    res.json({ success: true, message: 'User added successfully', user: { username, role, displayName } });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add user' });
+  }
+});
+
+app.put('/api/users/:username', requireSuperAdmin, async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { password, role, displayName } = req.body;
+    const users = await readUsers();
+    const userIndex = users.findIndex(u => u.username === username);
+    if (userIndex === -1) return res.status(404).json({ error: 'User not found' });
+    if (role && !['admin', 'super_admin'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be admin or super_admin' });
+    }
+    if (password && password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+    if (role === 'admin' && users[userIndex].role === 'super_admin') {
+      const superAdminCount = users.filter(u => u.role === 'super_admin').length;
+      if (superAdminCount <= 1) return res.status(400).json({ error: 'Cannot demote the last super admin' });
+    }
+    if (password) users[userIndex].passwordHash = await bcrypt.hash(password, 10);
+    if (role) users[userIndex].role = role;
+    if (displayName) users[userIndex].displayName = displayName;
+    await writeUsers(users);
+    await logAudit('UPDATE_USER', { username, updates: { password: password ? '***' : undefined, role, displayName } }, req.session.username);
+    res.json({ success: true, message: 'User updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+app.delete('/api/users/:username', requireSuperAdmin, async (req, res) => {
+  try {
+    const { username } = req.params;
+    const users = await readUsers();
+    const userIndex = users.findIndex(u => u.username === username);
+    if (userIndex === -1) return res.status(404).json({ error: 'User not found' });
+    if (username === req.session.username) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+    if (users[userIndex].role === 'super_admin') {
+      const superAdminCount = users.filter(u => u.role === 'super_admin').length;
+      if (superAdminCount <= 1) return res.status(400).json({ error: 'Cannot delete the last super admin' });
+    }
+    const deletedRole = users[userIndex].role; // captured before splice
+    users.splice(userIndex, 1);
+    await writeUsers(users);
+    await logAudit('DELETE_USER', { username, role: deletedRole }, req.session.username);
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete user' });
   }
 });
 

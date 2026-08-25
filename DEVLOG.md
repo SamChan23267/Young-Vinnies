@@ -77,3 +77,8 @@
 **What:** Added a `PUT /api/change-password` endpoint requiring the correct current password (verified via bcrypt) before allowing a new one to be set, and wired up the change-password form on the Settings page. Password changes are recorded in the audit log.
 **Why:** Completes the Settings page properly rather than leaving it half-built. Verifying the current password before allowing a change matters — without it, anyone with an already-open session could silently take over the account.
 **Next:** Build the actual SVdP-required roll & return export format (closes the still-open 17 March Issue).
+
+25th August 2026
+**What:** Added `GET`/`POST`/`PUT`/`DELETE /api/users` endpoints, all restricted to `super_admin`. New and updated passwords are hashed with bcrypt before storage. Includes safeguards against demoting or deleting the last remaining super admin, and against deleting your own account.
+**Why:** With multiple leaders now having roles, a super admin needs a way to actually add, edit, and remove user accounts through the app itself rather than editing `users.json` by hand.
+**Next:** Add a system statistics endpoint to summarise usage for the admin page.
