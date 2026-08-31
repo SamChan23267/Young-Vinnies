@@ -77,3 +77,13 @@
 **What:** Added a `PUT /api/change-password` endpoint requiring the correct current password (verified via bcrypt) before allowing a new one to be set, and wired up the change-password form on the Settings page. Password changes are recorded in the audit log.
 **Why:** Completes the Settings page properly rather than leaving it half-built. Verifying the current password before allowing a change matters — without it, anyone with an already-open session could silently take over the account.
 **Next:** Build the actual SVdP-required roll & return export format (closes the still-open 17 March Issue).
+
+31st August 2026
+**What:** Added an `hours` field to sessions (default 1, adjustable per session via the create-session form), stored and displayed alongside each session's existing date/description/attendance.
+**Why:** Attendance previously just recorded who showed up, with every session implicitly worth the same amount. In practice, volunteers don't contribute equal time at a session — people arrive late, leave early, or stay back to help pack up. Logged as a self-observed data model gap before building, since it's a prerequisite for the SVdP export doing accurate hour-based reporting rather than a flat attendance count.
+**Next:** Add per-member hours override — a fixed hours value per session still doesn't account for individual people arriving late or leaving early.
+ 
+ 31st August 2026
+ **What:** Changed attendance from a plain list of member codes to a list of `{ code, hours }` objects, letting each attendee's hours be overridden individually rather than always inheriting the session's default. Updated the attendance form to show an editable hours input next to each checked-in member.
+**Why:** A single default-hours-per-session value (previous commit) still assumed everyone present stayed the same length of time, which isn't true in practice — people arrive late, leave early, or stay back to help pack up. This was the actual gap identified in the triggering Issue, not just varying hours session-to-session.
+**Next:** Build the actual SVdP-required roll & return export format, now with accurate per-member hours to draw from.

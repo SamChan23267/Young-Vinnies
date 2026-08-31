@@ -12,9 +12,19 @@
   "sessions": [
     {
       "id": "1",
-      "date": "2026-08-07",
+      "date": "2026-08-31",
       "description": "Gardening",
-      "attendees": []
+      "hours": 1,
+      "attendees": [
+        {
+          "code": "JOHND",
+          "hours": 1
+        },
+        {
+          "code": "MAXB",
+          "hours": 1
+        }
+      ]
     }
   ]
 }

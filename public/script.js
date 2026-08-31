@@ -135,18 +135,18 @@ if (window.location.pathname.endsWith('sessions.html')) {
             container.innerHTML = sessions.map(session => {
                 const attendeeCount = session.attendees.length;
                 const attendeeText = attendeeCount === 1 ? '1 attendee' : `${attendeeCount} attendees`;
-                
                 return `
                     <div class="session-item">
-                        <h4>${session.description}</h4>
-                        <p><strong>Date:</strong> ${new Date(session.date).toLocaleDateString()}</p>
-                        <p><strong>Attendance:</strong> ${attendeeText}</p>
-                        ${session.attendees.length > 0 ? `
-                            <div class="attendees">
-                                <strong>Attendees:</strong> ${session.attendees.join(', ')}
-                            </div>
-                        ` : ''}
-                        <a href="session.html?id=${session.id}" class="btn btn-info">View/Edit Attendance</a>
+                    <h4>${session.description}</h4>
+                    <p><strong>Date:</strong> ${new Date(session.date).toLocaleDateString()}</p>
+                    <p><strong>Hours:</strong> ${session.hours || 1}</p> <!-- NEW -->
+                    <p><strong>Attendance:</strong> ${attendeeText}</p>
+                    ${session.attendees.length > 0 ? `
+                        <div class="attendees">
+                            <strong>Attendees:</strong> ${session.attendees.map(a => a.code).join(', ')} <!-- CHANGED -->
+                        </div>
+                    ` : ''}
+                    <a href="session.html?id=${session.id}" class="btn btn-info">View/Edit Attendance</a>
                     </div>
                 `;
             }).join('');
@@ -160,22 +160,24 @@ if (window.location.pathname.endsWith('sessions.html')) {
         e.preventDefault();
         const dateInput = document.getElementById('session-date');
         const descriptionInput = document.getElementById('session-description');
-        
+        const hoursInput = document.getElementById('session-hours');
+
         const date = dateInput.value;
         const description = descriptionInput.value.trim();
-        
+        const hours = hoursInput.value;
+
         if (!date || !description) return;
-        
+
         try {
             const session = await apiCall('/api/sessions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date, description })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date, description, hours })
             });
-            
             showMessage(`Session "${session.description}" created!`, 'success');
             dateInput.value = '';
             descriptionInput.value = '';
+            hoursInput.value = '1';
             loadSessions();
         } catch (error) {
             console.error('Error creating session:', error);
@@ -224,19 +226,18 @@ if (window.location.pathname.endsWith('session.html')) {
                 return;
             }
             
-            attendanceList.innerHTML = members.map(member => `
-                <div class="attendance-item">
-                    <input 
-                        type="checkbox" 
-                        id="member-${member.code}" 
-                        value="${member.code}"
-                        ${session.attendees.includes(member.code) ? 'checked' : ''}
-                    >
-                    <label for="member-${member.code}">
-                        ${member.name} (${member.code})
-                    </label>
-                </div>
-            `).join('');
+            attendanceList.innerHTML = members.map(member => {
+                const existingAttendee = session.attendees.find(a => a.code === member.code); // CHANGED
+                const isAttending = !!existingAttendee;
+                const hoursValue = existingAttendee ? existingAttendee.hours : (session.hours || 1); // NEW
+                return `
+                    <div class="attendance-item">
+                    <input type="checkbox" id="member-${member.code}" value="${member.code}" ${isAttending ? 'checked' : ''}>
+                    <label for="member-${member.code}">${member.name} (${member.code})</label>
+                    <input type="number" class="attendance-hours-input" id="hours-${member.code}" min="0" step="1" value="${hoursValue}"> <!-- NEW -->
+                    </div>
+                `;
+            }).join('');
             
         } catch (error) {
             console.error('Error loading session details:', error);
@@ -247,19 +248,19 @@ if (window.location.pathname.endsWith('session.html')) {
     // Save attendance form handler
     document.getElementById('attendance-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const checkboxes = document.querySelectorAll('#attendance-list input[type="checkbox"]');
         const attendees = Array.from(checkboxes)
             .filter(cb => cb.checked)
-            .map(cb => cb.value);
-        
+            .map(cb => {
+            const hoursInput = document.getElementById(`hours-${cb.value}`); // NEW
+            return { code: cb.value, hours: hoursInput.value || 1 }; // CHANGED: object, not just code
+            });
         try {
             await apiCall(`/api/sessions/${sessionId}/attendance`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ attendees })
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ attendees })
             });
-            
             showMessage('Attendance saved successfully!', 'success');
             setTimeout(() => loadSessionDetails(), 500);
         } catch (error) {
