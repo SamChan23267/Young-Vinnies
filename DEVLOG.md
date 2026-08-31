@@ -83,3 +83,7 @@
 **Why:** Attendance previously just recorded who showed up, with every session implicitly worth the same amount. In practice, volunteers don't contribute equal time at a session — people arrive late, leave early, or stay back to help pack up. Logged as a self-observed data model gap before building, since it's a prerequisite for the SVdP export doing accurate hour-based reporting rather than a flat attendance count.
 **Next:** Add per-member hours override — a fixed hours value per session still doesn't account for individual people arriving late or leaving early.
  
+ 31st August 2026
+ **What:** Changed attendance from a plain list of member codes to a list of `{ code, hours }` objects, letting each attendee's hours be overridden individually rather than always inheriting the session's default. Updated the attendance form to show an editable hours input next to each checked-in member.
+**Why:** A single default-hours-per-session value (previous commit) still assumed everyone present stayed the same length of time, which isn't true in practice — people arrive late, leave early, or stay back to help pack up. This was the actual gap identified in the triggering Issue, not just varying hours session-to-session.
+**Next:** Build the actual SVdP-required roll & return export format, now with accurate per-member hours to draw from.

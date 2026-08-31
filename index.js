@@ -304,25 +304,23 @@ app.put('/api/sessions/:id/attendance', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { attendees } = req.body;
-    
     if (!Array.isArray(attendees)) {
       return res.status(400).json({ error: 'Attendees must be an array' });
     }
-    
     const data = await readData();
     const sessionIndex = data.sessions.findIndex(s => s.id === id);
-    
     if (sessionIndex === -1) {
       return res.status(404).json({ error: 'Session not found' });
     }
-    
-    data.sessions[sessionIndex].attendees = attendees;
+    const sessionDefaultHours = data.sessions[sessionIndex].hours || 1;
+    // NEW: each attendee now carries their own hours, defaulting to the session's hours
+    const normalizedAttendees = attendees.map(a => ({
+      code: a.code,
+      hours: a.hours != null && a.hours !== '' ? parseInt(a.hours) : sessionDefaultHours
+    }));
+    data.sessions[sessionIndex].attendees = normalizedAttendees;
     await writeData(data);
-    await logAudit('UPDATE_ATTENDANCE', {
-      sessionId: id,
-      attendees
-    }, req.session.username);
-    
+    await logAudit('UPDATE_ATTENDANCE', { sessionId: id, attendees: normalizedAttendees }, req.session.username);
     res.json(data.sessions[sessionIndex]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update attendance' });
