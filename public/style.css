@@ -426,3 +426,34 @@ footer {
   border: 1px solid #ddd;
   border-radius: 4px;
 }
+
+.export-options { display: flex; flex-direction: column; gap: 15px; }
+.date-range-inputs { display: flex; align-items: center; gap: 10px; }
+.session-selection-controls { display: flex; gap: 10px; margin-bottom: 15px; }
+.session-selection-list { display: flex; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; margin-bottom: 15px; }
+.session-checkbox { display: flex; align-items: center; gap: 8px; padding: 8px; background: #f8f9fa; border-radius: 4px; }
+.export-actions { display: flex; gap: 10px; }
+
+.form-select,
+.form-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 1em;
+  background: white;
+  transition: border-color 0.3s;
+}
+
+.form-select:focus,
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.session-selection-list {
+  border: 2px solid #eee;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fafafa;
+}

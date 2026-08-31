@@ -29,8 +29,46 @@
         <main>
             <section class="card">
                 <h2>📊 Data Export</h2>
-                <p>Download all session attendance data as a CSV file.</p>
-                <button id="export-csv-btn" class="btn btn-success">Export All Sessions to CSV</button>
+                <p>Download session attendance data. Members are repeated based on hours worked (e.g., 4 hours = name appears 4 times) in vertical orientation.</p>
+                <div class="export-options">
+                    <h3>Export Settings</h3>
+                    <div class="form-group">
+                        <label for="orientation">Orientation:</label>
+                        <select id="orientation" class="form-select">
+                            <option value="horizontal">Horizontal (one row per session)</option>
+                            <option value="vertical">Vertical (one row per member per hour)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="member-display">Member Display:</label>
+                        <select id="member-display" class="form-select">
+                            <option value="code">Code only</option>
+                            <option value="name">Name only</option>
+                            <option value="both">Both (Code and Name)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="date-range-start">Date Range (Optional):</label>
+                        <div class="date-range-inputs">
+                            <input type="date" id="date-range-start" class="form-input">
+                            <span>to</span>
+                            <input type="date" id="date-range-end" class="form-input">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3>Select Sessions to Export</h3>
+                <div class="session-selection-controls">
+                    <button id="select-all-sessions" class="btn btn-secondary">Select All</button>
+                    <button id="deselect-all-sessions" class="btn btn-secondary">Deselect All</button>
+                </div>
+                <div id="session-selection-list" class="session-selection-list"></div>
+                <div class="export-actions">
+                    <button id="export-selected-btn" class="btn btn-success">Export Selected Sessions</button>
+                    <button id="export-all-btn" class="btn btn-primary">Export All Sessions</button>
+                </div>
             </section>
         </main>
             

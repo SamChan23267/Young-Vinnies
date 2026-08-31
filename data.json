@@ -25,6 +25,18 @@
           "hours": 1
         }
       ]
+    },
+    {
+      "id": "2",
+      "date": "2026-08-24",
+      "description": "Gardening",
+      "hours": 1,
+      "attendees": [
+        {
+          "code": "JOHND",
+          "hours": 1
+        }
+      ]
     }
   ]
 }

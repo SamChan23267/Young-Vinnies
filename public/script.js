@@ -187,10 +187,50 @@ if (window.location.pathname.endsWith('sessions.html')) {
 }
 
 if (window.location.pathname.endsWith('export.html')) {
-  document.getElementById('export-csv-btn')?.addEventListener('click', () => {
-    window.location.href = '/api/export/csv';
-    showMessage('Downloading CSV file...', 'success');
+  async function loadSessionsForExport() {
+    const sessions = await fetch('/api/sessions').then(r => r.json());
+    const container = document.getElementById('session-selection-list');
+    container.innerHTML = sessions.map(s => `
+      <label class="session-checkbox">
+        <input type="checkbox" class="export-session-checkbox" value="${s.id}">
+        ${s.description} — ${new Date(s.date).toLocaleDateString()} (${s.hours || 1}hr default)
+      </label>
+    `).join('');
+  }
+
+  function buildExportUrl(sessionIds) {
+    const params = new URLSearchParams();
+    params.set('orientation', document.getElementById('orientation').value);
+    params.set('memberDisplay', document.getElementById('member-display').value);
+    const start = document.getElementById('date-range-start').value;
+    const end = document.getElementById('date-range-end').value;
+    if (start) params.set('startDate', start);
+    if (end) params.set('endDate', end);
+    if (sessionIds) params.set('sessionIds', sessionIds.join(','));
+    return `/api/export/csv?${params.toString()}`;
+  }
+
+  document.getElementById('select-all-sessions')?.addEventListener('click', () => {
+    document.querySelectorAll('.export-session-checkbox').forEach(cb => cb.checked = true);
   });
+  document.getElementById('deselect-all-sessions')?.addEventListener('click', () => {
+    document.querySelectorAll('.export-session-checkbox').forEach(cb => cb.checked = false);
+  });
+
+  document.getElementById('export-selected-btn')?.addEventListener('click', () => {
+    const selected = Array.from(document.querySelectorAll('.export-session-checkbox:checked')).map(cb => cb.value);
+    if (selected.length === 0) {
+      showMessage('Select at least one session first', 'error');
+      return;
+    }
+    window.location.href = buildExportUrl(selected);
+  });
+
+  document.getElementById('export-all-btn')?.addEventListener('click', () => {
+    window.location.href = buildExportUrl(null);
+  });
+
+  loadSessionsForExport();
 }
 
 // Session Page Functions
