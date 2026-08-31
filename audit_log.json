@@ -24,5 +24,17 @@
       "description": "Gardening",
       "attendees": []
     }
+  },
+  {
+    "timestamp": "2026-08-31T05:00:42.462Z",
+    "username": "admin",
+    "action": "CREATE_SESSION",
+    "data": {
+      "id": "2",
+      "date": "2026-08-31",
+      "description": "Gardening",
+      "hours": 1,
+      "attendees": []
+    }
   }
 ]

@@ -15,6 +15,13 @@
       "date": "2026-08-07",
       "description": "Gardening",
       "attendees": []
+    },
+    {
+      "id": "2",
+      "date": "2026-08-31",
+      "description": "Gardening",
+      "hours": 1,
+      "attendees": []
     }
   ]
 }

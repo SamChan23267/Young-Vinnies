@@ -266,26 +266,16 @@ app.get('/api/sessions', requireAuth, async (req, res) => {
 // POST /api/sessions - Create a new session
 app.post('/api/sessions', requireAuth, async (req, res) => {
   try {
-    const { date, description } = req.body;
-    
+    const { date, description, hours } = req.body; // NEW: hours
     if (!date || !description) {
       return res.status(400).json({ error: 'Date and description are required' });
     }
-    
     const data = await readData();
     const id = generateSessionId(data.sessions);
-    
-    const newSession = {
-      id,
-      date,
-      description,
-      attendees: []
-    };
-    
+    const newSession = { id, date, description, hours: hours ? parseInt(hours) : 1, attendees: [] }; // NEW: hours, default 1
     data.sessions.push(newSession);
     await writeData(data);
     await logAudit('CREATE_SESSION', newSession, req.session.username);
-    
     res.status(201).json(newSession);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create session' });

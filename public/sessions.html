@@ -33,6 +33,11 @@
                     <h3>Create New Session</h3>
                     <form id="create-session-form">
                         <div class="form-group">
+                            <label for="session-hours">Hours:</label>
+                            <input type="number" id="session-hours" min="1" max="24" step="1" value="1" required>
+                            <small style="color: #666; display: block; margin-top: 5px;">Default hours for this session (whole numbers only)</small>
+                        </div>
+                        <div class="form-group">
                             <label for="session-date">Session Date:</label>
                             <input type="date" id="session-date" required>
                         </div>

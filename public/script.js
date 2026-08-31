@@ -135,18 +135,18 @@ if (window.location.pathname.endsWith('sessions.html')) {
             container.innerHTML = sessions.map(session => {
                 const attendeeCount = session.attendees.length;
                 const attendeeText = attendeeCount === 1 ? '1 attendee' : `${attendeeCount} attendees`;
-                
                 return `
                     <div class="session-item">
-                        <h4>${session.description}</h4>
-                        <p><strong>Date:</strong> ${new Date(session.date).toLocaleDateString()}</p>
-                        <p><strong>Attendance:</strong> ${attendeeText}</p>
-                        ${session.attendees.length > 0 ? `
-                            <div class="attendees">
-                                <strong>Attendees:</strong> ${session.attendees.join(', ')}
-                            </div>
-                        ` : ''}
-                        <a href="session.html?id=${session.id}" class="btn btn-info">View/Edit Attendance</a>
+                    <h4>${session.description}</h4>
+                    <p><strong>Date:</strong> ${new Date(session.date).toLocaleDateString()}</p>
+                    <p><strong>Hours:</strong> ${session.hours || 1}</p> <!-- NEW -->
+                    <p><strong>Attendance:</strong> ${attendeeText}</p>
+                    ${session.attendees.length > 0 ? `
+                        <div class="attendees">
+                        <strong>Attendees:</strong> ${session.attendees.join(', ')}
+                        </div>
+                    ` : ''}
+                    <a href="session.html?id=${session.id}" class="btn btn-info">View/Edit Attendance</a>
                     </div>
                 `;
             }).join('');
@@ -160,22 +160,24 @@ if (window.location.pathname.endsWith('sessions.html')) {
         e.preventDefault();
         const dateInput = document.getElementById('session-date');
         const descriptionInput = document.getElementById('session-description');
-        
+        const hoursInput = document.getElementById('session-hours');
+
         const date = dateInput.value;
         const description = descriptionInput.value.trim();
-        
+        const hours = hoursInput.value;
+
         if (!date || !description) return;
-        
+
         try {
             const session = await apiCall('/api/sessions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date, description })
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date, description, hours })
             });
-            
             showMessage(`Session "${session.description}" created!`, 'success');
             dateInput.value = '';
             descriptionInput.value = '';
+            hoursInput.value = '1';
             loadSessions();
         } catch (error) {
             console.error('Error creating session:', error);
