@@ -327,28 +327,62 @@ app.put('/api/sessions/:id/attendance', requireAuth, async (req, res) => {
   }
 });
 
+// Proper CSV field escaping — handles commas, quotes, and newlines in data
+function csvEscape(value) {
+  const str = String(value ?? '');
+  return `"${str.replace(/"/g, '""')}"`;
+}
+
 // GET /api/export/csv - Generate and return a CSV file of all session attendance data
 app.get('/api/export/csv', requireAuth, async (req, res) => {
   try {
+    const { orientation = 'horizontal', memberDisplay = 'code', startDate, endDate, sessionIds } = req.query;
     const data = await readData();
-    
-    // Create CSV header
-    let csv = 'Session Date,Session Description,Attended Member Codes\n';
-    
-    // Add rows for each session and attendee
-    data.sessions.forEach(session => {
-      if (session.attendees.length === 0) {
-        // Include sessions with no attendees
-        csv += `"${session.date}","${session.description}",""\n`;
-      } else {
-        session.attendees.forEach(attendeeCode => {
-          csv += `"${session.date}","${session.description}","${attendeeCode}"\n`;
+
+    let sessions = data.sessions;
+    if (startDate) sessions = sessions.filter(s => s.date >= startDate);
+    if (endDate) sessions = sessions.filter(s => s.date <= endDate);
+    if (sessionIds) {
+      const idSet = new Set(sessionIds.split(','));
+      sessions = sessions.filter(s => idSet.has(s.id));
+    }
+
+    const memberMap = {};
+    data.members.forEach(m => { memberMap[m.code] = m; });
+    function displayFor(code) {
+      const member = memberMap[code];
+      if (!member) return code;
+      if (memberDisplay === 'name') return member.name;
+      if (memberDisplay === 'both') return `${member.name} (${member.code})`;
+      return member.code;
+    }
+
+    let csv;
+    if (orientation === 'vertical') {
+      // One row per member per hour worked — uses each attendee's OWN hours,
+      // falling back to the session default only if somehow missing
+      csv = 'Session Date,Session Description,Member\n';
+      sessions.forEach(session => {
+        session.attendees.forEach(attendee => {
+          const hours = attendee.hours || session.hours || 1; // CHANGED: individual hours first
+          for (let i = 0; i < hours; i++) {
+            csv += [csvEscape(session.date), csvEscape(session.description), csvEscape(displayFor(attendee.code))].join(',') + '\n';
+          }
         });
-      }
-    });
-    
+      });
+    } else {
+      // One row per session, with each attendee's individual hours shown
+      csv = 'Session Date,Session Description,Default Hours,Attendees (Hours)\n';
+      sessions.forEach(session => {
+        const attendeeList = session.attendees
+          .map(a => `${displayFor(a.code)} (${a.hours || session.hours || 1}hr)`)
+          .join('; ');
+        csv += [csvEscape(session.date), csvEscape(session.description), csvEscape(session.hours || 1), csvEscape(attendeeList)].join(',') + '\n';
+      });
+    }
+
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename=volunteer_hours.csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=svdp_roll_return.csv');
     res.send(csv);
   } catch (error) {
     res.status(500).json({ error: 'Failed to export CSV' });

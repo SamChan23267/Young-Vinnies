@@ -87,3 +87,8 @@
  **What:** Changed attendance from a plain list of member codes to a list of `{ code, hours }` objects, letting each attendee's hours be overridden individually rather than always inheriting the session's default. Updated the attendance form to show an editable hours input next to each checked-in member.
 **Why:** A single default-hours-per-session value (previous commit) still assumed everyone present stayed the same length of time, which isn't true in practice — people arrive late, leave early, or stay back to help pack up. This was the actual gap identified in the triggering Issue, not just varying hours session-to-session.
 **Next:** Build the actual SVdP-required roll & return export format, now with accurate per-member hours to draw from.
+
+1st September 2026
+**What:** Replaced the original flat CSV export with a configurable roll & return format — orientation (one row per session, or one row per member per hour worked), member display (code/name/both), date range filtering, and the ability to select specific sessions rather than exporting everything.
+**Why:** Finally implements what SVdP actually asked for at the 17 March meeting — the original Stage 6 export was only ever for copy-pasting into our own Google Sheets, never the format SVdP requested. Depends on the hours field from the previous stage so the vertical export can accurately represent varying contribution per member, rather than treating every attendance as equal.
+**Next:** Confirm the exported format with SVdP directly and close the 17 March Issue once confirmed — not before, since "code works" and "SVdP confirms it's right" are different things.
