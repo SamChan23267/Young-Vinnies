@@ -2,11 +2,15 @@
   "members": [
     {
       "name": "John Doe",
-      "code": "JOHND"
+      "code": "JOHND",
+      "yearLevel": "11",
+      "email": "jd@example.email.com"
     },
     {
       "name": "Max Butler",
-      "code": "MAXB"
+      "code": "MAXB",
+      "yearLevel": "13",
+      "email": "mb@example.email.com"
     }
   ],
   "sessions": [
