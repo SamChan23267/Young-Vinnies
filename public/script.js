@@ -68,52 +68,163 @@ async function apiCall(url, options = {}) {
 }
 
 if (window.location.pathname.endsWith('members.html')) {
-    // Load members
-    async function loadMembers() {
-        try {
-            const members = await fetch('/api/members').then(res => res.json());
-            const tbody = document.getElementById('members-tbody');
-            
-            if (members.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="2" class="empty-state"><p>No members yet. Add your first member above!</p></td></tr>';
-                return;
-            }
-            
-            tbody.innerHTML = members.map(member => `
-                <tr>
-                    <td>${member.name}</td>
-                    <td><strong>${member.code}</strong></td>
-                </tr>
-            `).join('');
-        } catch (error) {
-            console.error('Error loading members:', error);
-        }
-    }
+  let allMembers = [];
+  let allSessions = [];
 
-        // Add member form handler
-    document.getElementById('add-member-form')?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const nameInput = document.getElementById('member-name');
-        const name = nameInput.value.trim();
-        
-        if (!name) return;
-        
-        try {
-            const member = await apiCall('/api/members', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name })
-            });
-            
-            showMessage(`Member "${member.name}" added with code ${member.code}!`, 'success');
-            nameInput.value = '';
-            loadMembers();
-        } catch (error) {
-            console.error('Error adding member:', error);
-        }
+  function calculateMemberHours(memberCode) { // NEW
+    let hours = 0;
+    allSessions.forEach(session => {
+      const attendee = session.attendees.find(a => a.code === memberCode);
+      if (attendee) hours += attendee.hours || session.hours || 1;
     });
+    return hours;
+  }
 
-  loadMembers();
+  function filterAndSortMembers() { // NEW
+    let filtered = [...allMembers];
+    const searchTerm = document.getElementById('member-search')?.value.toLowerCase() || '';
+    if (searchTerm) {
+      filtered = filtered.filter(member =>
+        member.name.toLowerCase().includes(searchTerm) ||
+        member.code.toLowerCase().includes(searchTerm) ||
+        (member.yearLevel && member.yearLevel.toString().toLowerCase().includes(searchTerm)) ||
+        (member.email && member.email.toLowerCase().includes(searchTerm))
+      );
+    }
+    const sortValue = document.getElementById('member-sort')?.value || '';
+    if (sortValue) {
+      filtered.sort((a, b) => {
+        switch (sortValue) {
+          case 'year-asc': return (parseInt(a.yearLevel) || 999) - (parseInt(b.yearLevel) || 999);
+          case 'year-desc': return (parseInt(b.yearLevel) || -1) - (parseInt(a.yearLevel) || -1);
+          case 'hours-asc': return calculateMemberHours(a.code) - calculateMemberHours(b.code);
+          case 'hours-desc': return calculateMemberHours(b.code) - calculateMemberHours(a.code);
+          default: return 0;
+        }
+      });
+    }
+    displayMembers(filtered);
+  }
+
+  async function loadMembersPage() { // CHANGED: now fetches sessions too, for hours
+    try {
+      [allMembers, allSessions] = await Promise.all([
+        fetch('/api/members').then(res => res.json()),
+        fetch('/api/sessions').then(res => res.json())
+      ]);
+      filterAndSortMembers();
+    } catch (error) {
+      console.error('Error loading members:', error);
+    }
+  }
+
+  function displayMembers(members) { // CHANGED: adds email, hours, edit/delete
+    const tbody = document.getElementById('members-tbody');
+    document.getElementById('member-count').textContent = members.length;
+    if (members.length === 0) {
+      tbody.innerHTML = allMembers.length === 0
+        ? '<tr><td colspan="6" class="empty-state"><p>No members yet. Add your first member above!</p></td></tr>'
+        : '<tr><td colspan="6" class="empty-state"><p>No members match your search.</p></td></tr>';
+      return;
+    }
+    tbody.innerHTML = members.map(member => `
+      <tr>
+        <td>${member.name}</td>
+        <td><strong>${member.code}</strong></td>
+        <td>${member.yearLevel || '-'}</td>
+        <td>${member.email || '-'}</td>
+        <td>${calculateMemberHours(member.code)} hrs</td>
+        <td>
+          <div class="action-buttons">
+            <button class="btn btn-edit" onclick="editMember('${member.code}')">Edit</button>
+            <button class="btn btn-delete" onclick="deleteMember('${member.code}', '${member.name}')">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('member-search')?.addEventListener('input', filterAndSortMembers);
+  document.getElementById('member-sort')?.addEventListener('change', filterAndSortMembers);
+
+  document.getElementById('add-member-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nameInput = document.getElementById('member-name');
+    const yearLevelInput = document.getElementById('member-year-level');
+    const emailInput = document.getElementById('member-email'); // NEW
+    const name = nameInput.value.trim();
+    const yearLevel = yearLevelInput.value.trim();
+    const email = emailInput.value.trim(); // NEW
+    if (!name) return;
+    try {
+      const member = await apiCall('/api/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, yearLevel, email })
+      });
+      showMessage(`Member "${member.name}" added with code ${member.code}!`, 'success');
+      nameInput.value = ''; yearLevelInput.value = ''; emailInput.value = '';
+      loadMembersPage();
+    } catch (error) {
+      console.error('Error adding member:', error);
+    }
+  });
+
+  window.editMember = function(code) { // NEW
+    const member = allMembers.find(m => m.code === code);
+    if (!member) return;
+    document.getElementById('edit-member-old-code').value = member.code;
+    document.getElementById('edit-member-name').value = member.name;
+    document.getElementById('edit-member-code').value = member.code;
+    document.getElementById('edit-member-year-level').value = member.yearLevel || '';
+    document.getElementById('edit-member-email').value = member.email || '';
+    document.getElementById('edit-member-modal').style.display = 'flex';
+  };
+
+  function closeEditMemberModal() {
+    document.getElementById('edit-member-modal').style.display = 'none';
+  }
+  document.querySelector('#edit-member-modal .modal-close')?.addEventListener('click', closeEditMemberModal);
+  document.querySelector('#edit-member-modal .modal-cancel')?.addEventListener('click', closeEditMemberModal);
+
+  document.getElementById('edit-member-form')?.addEventListener('submit', async (e) => { // NEW
+    e.preventDefault();
+    const oldCode = document.getElementById('edit-member-old-code').value;
+    const name = document.getElementById('edit-member-name').value.trim();
+    const newCode = document.getElementById('edit-member-code').value.trim();
+    const yearLevel = document.getElementById('edit-member-year-level').value.trim();
+    const email = document.getElementById('edit-member-email').value.trim();
+    try {
+      await apiCall(`/api/members/${oldCode}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, newCode, yearLevel, email })
+      });
+      showMessage('Member updated successfully!', 'success');
+      closeEditMemberModal();
+      loadMembersPage();
+    } catch (error) {
+      console.error('Error updating member:', error);
+    }
+  });
+
+  window.deleteMember = async function(code, name) { // NEW
+    if (!confirm(`Are you sure you want to delete "${name}"? This cannot be undone.`)) return;
+    try {
+      await apiCall(`/api/members/${code}`, { method: 'DELETE' });
+      showMessage(`Member "${name}" deleted.`, 'success');
+      loadMembersPage();
+    } catch (error) {
+      console.error('Error deleting member:', error);
+    }
+  };
+
+  window.onclick = function(event) { // NEW
+    const modal = document.getElementById('edit-member-modal');
+    if (event.target === modal) closeEditMemberModal();
+  };
+
+  loadMembersPage();
 }
 
 

@@ -457,3 +457,43 @@ footer {
   padding: 12px;
   background: #fafafa;
 }
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+.modal-close {
+  position: absolute;
+  top: 15px; right: 20px;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #999;
+}
+.modal-close:hover { color: #333; }
+.modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
+
+/* --- Member table actions --- */
+.action-buttons { display: flex; gap: 8px; }
+.btn-edit { background: #17a2b8; color: white; padding: 6px 14px; font-size: 0.85em; }
+.btn-edit:hover { background: #138496; }
+.btn-delete { background: #dc3545; color: white; padding: 6px 14px; font-size: 0.85em; }
+.btn-delete:hover { background: #c82333; }
+
+/* --- Search + sort row --- */
+.search-section { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+.search-input { flex: 1; min-width: 200px; padding: 12px; border: 2px solid #ddd; border-radius: 6px; }
