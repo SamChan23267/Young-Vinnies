@@ -97,3 +97,8 @@
 **What:** Extended member records with year level and email fields, editable via a modal (including changing a member's code, which updates their attendance references across all sessions). Added member deletion, a search box (name/code/year level/email), and sort options (year level or total hours, ascending/descending). Total hours per member are now computed and displayed directly in the table.
 **Why:** Responding to a recurring pattern of requests from the teacher/staff coordinator — needing to know which members belong to a given year level for restricted events, and wanting an easier way to find and manage members as the roster grew past 100. Not a single dated request, but a repeated need that justified building it properly rather than continuing to handle each ask manually.
 **Next:** Bulk year-level rollover for next year's cohort — deferred from this stage since it's a related but separate need.
+
+13th September 2026
+**What:** Added `vercel.json`, updated `index.js` to export the Express app for Vercel's serverless runtime instead of always calling `.listen()`, and documented deployment steps in the README.
+**Why:** A multi-leader login system is pointless if it only runs on my own laptop — other leaders and the teacher need to actually reach it. This was the real trigger behind building authentication in the first place, and it's been overdue since then.
+**Next:** Confirm the app is reachable and login works. Expect writes (adding members, sessions, etc.) to fail or silently not persist once deployed — Vercel's serverless functions run on a read-only filesystem, so JSON file storage won't actually save in production even though it works locally. That's the trigger for the next stage, not a bug to fix here.
